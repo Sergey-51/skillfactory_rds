@@ -1,0 +1,617 @@
+
+
+###########################---4 Часть---#####################################################
+
+/*
+Задание 4.1
+База данных содержит список аэропортов практически
+всех крупных городов России.
+В большинстве городов есть только один аэропорт.
+Исключение составляет:
+*/
+
+SELECT  city
+       ,count(airport_code) AS cnt_airports
+FROM dst_project.airports
+GROUP BY city
+HAVING count(airport_name) > 1
+ORDER BY cnt_airports DESC
+
+--answer: "Moscow, Ulyanovsk"
+
+/*
+Задание 4.2
+Вопрос 1. Таблица рейсов содержит всю информацию о прошлых,
+текущих и запланированных рейсах.
+Сколько всего статусов для рейсов определено в таблице?
+*/
+
+SELECT count(DISTINCT status)
+FROM dst_project.flights
+
+--answer: 6
+
+/*
+Вопрос 2. Какое количество самолетов находятся в воздухе
+на момент среза в базе (статус рейса «самолёт уже вылетел и находится в воздухе»).
+*/
+
+--сначала посмотрим какие статусы есть в БД
+SELECT DISTINCT status
+FROM dst_project.flights
+
+-- теперь напишем сам запрос 
+SELECT count(flight_id)
+FROM dst_project.flights
+WHERE status='Departed'
+
+--answer: 58
+
+/*
+Вопрос 3. Места определяют схему салона каждой модели. Сколько мест имеет самолет модели 773  (Boeing 777-300)?
+*/
+
+SELECT count(DISTINCT seat_no)
+FROM dst_project.seats
+WHERE aircraft_code='773'
+
+--answer: 402
+
+/*
+Вопрос 4. Сколько состоявшихся (фактических) рейсов было совершено между 1 апреля 2017 года и 1 сентября 2017 года?
+Здесь и далее состоявшийся рейс означает, что он не отменён, и самолёт прибыл в пункт назначения.
+*/
+
+SELECT count(flight_id) AS cnt_flights
+FROM dst_project.flights
+WHERE scheduled_arrival BETWEEN TIMESTAMP '2017-04-01 00:00:00' AND TIMESTAMP '2017-09-01 00:00:00'
+  AND status!='Cancelled'
+  AND status='Arrived'
+
+--answer: 74227
+
+/*
+Задание 4.3
+Вопрос 1. Сколько всего рейсов было отменено по данным базы?
+*/
+
+SELECT count(flight_id) AS cnt_flights
+FROM dst_project.flights
+WHERE status='Cancelled'
+
+--answer: 437
+
+/*
+Вопрос 2. Сколько самолетов моделей типа Boeing, Sukhoi Superjet,
+Airbus находится в базе авиаперевозок?
+*/
+
+/*
+Чисто технически в самом задании уже есть неточность, так как
+Boeing и Airbus это названия брендов производителей, тогда как
+Sukhoi Superjet это название конкретной модели самолета.
+Поэтому считаю правильным считать по бренду Sukhoi - мы будем
+сравнивать сравнимое между собой.
+
+*/
+
+--запрос ниже создаст столбец с брендом производителем самолета
+SELECT  *
+       ,(string_to_array(a.model, ' '))[1] AS air_brand
+FROM dst_project.aircrafts AS a
+
+--запрос-ответ на вопрос
+SELECT  (string_to_array(a.model, ' '))[1] AS air_brand
+        ,count((string_to_array(a.model, ' '))[1]) AS cnt_aircrafts
+FROM dst_project.aircrafts AS a
+WHERE (string_to_array(a.model, ' '))[1] IN ('Boeing','Airbus','Sukhoi')
+GROUP BY air_brand
+ORDER BY cnt_aircrafts DESC, air_brand
+
+--а если вернуться к изначальной задаче, то её можно решить так
+
+--сначала интересный запрос по моделям, буз группировки по брендам
+--получим модель, бренд и количество самолетов в базе по поделям
+SELECT  a.model
+        ,(string_to_array(a.model, ' '))[1] AS air_brand
+        ,count(a.model) AS cnt_aircrafts
+FROM dst_project.aircrafts AS a
+WHERE a.model LIKE ANY(ARRAY['Boeing%','Airbus%','Sukhoi Superjet%'])
+GROUP BY air_brand, a.model
+ORDER BY cnt_aircrafts DESC, air_brand
+
+--финальный запрос
+SELECT  (string_to_array(a.model, ' '))[1] AS air_brand
+        ,count(a.model) AS cnt_aircrafts
+FROM dst_project.aircrafts AS a
+WHERE a.model LIKE ANY(ARRAY['Boeing%','Airbus%','Sukhoi Superjet%'])
+GROUP BY air_brand
+ORDER BY cnt_aircrafts DESC, air_brand
+
+/*
+Вопрос 3. В какой части (частях) света находится больше аэропортов?
+*/
+
+--добавим сначала столбец с частью света
+SELECT  *
+       ,split_part(a.timezone, '/', 1) AS part_world   
+FROM dst_project.airports AS a
+
+--теперь итоговый запрос-ответ (вариант с WITH)
+WITH airports_2 as
+    (SELECT *, split_part(a.timezone, '/', 1) AS part_world   
+     FROM dst_project.airports AS a)
+
+SELECT part_world
+      ,count(distinct airport_code) AS nmb_airports
+FROM airports_2 AS a2
+GROUP BY part_world
+ORDER BY nmb_airports DESC, part_world
+
+--теперь итоговый запрос-ответ (варинат с WITH мне не понравился
+-- своей избыточностью-громозкостью в данном случае)
+
+SELECT split_part(a.timezone, '/', 1) AS part_world
+      ,count(distinct a.airport_code) AS nmb_airports
+FROM dst_project.airports AS a
+GROUP BY part_world
+ORDER BY nmb_airports DESC, part_world
+
+/*
+Вопрос 4. У какого рейса была самая большая задержка прибытия
+за все время сбора данных? Введите id рейса (flight_id).
+*/
+
+SELECT f.flight_id
+--      ,f.scheduled_arrival	--использовал для отладки и проверки
+--      ,f.actual_arrival	--использовал для отладки и проверки
+--      ,(f.actual_arrival-f.scheduled_arrival) as delta_arriving --показывает разницу в общем (использовал для отладки и проверки)
+      ,extract(epoch from (f.actual_arrival-f.scheduled_arrival))/60 AS delta_arriving_minutes
+FROM dst_project.flights AS f
+WHERE f.status='Arrived'
+ORDER BY delta_arriving_minutes DESC
+LIMIT 1
+
+--answer: 157571
+
+/*
+Задание 4.4
+Вопрос 1. Когда был запланирован самый первый вылет, сохраненный в базе данных?
+*/
+
+SELECT min(f.scheduled_departure)
+FROM dst_project.flights AS f
+
+--интересно, что min показал время самого последнего вылета на эту дату
+-- первый вылет был в 12:20 АМ
+
+SELECT f.*
+FROM dst_project.flights AS f
+WHERE f.scheduled_departure BETWEEN TIMESTAMP '2017-08-14' AND  TIMESTAMP '2017-08-15'
+ORDER BY f.scheduled_departure
+
+/*
+Вопрос 2. Сколько минут составляет запланированное время полета в самом длительном рейсе?
+*/
+
+SELECT extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/60 AS delta_flying_minutes
+FROM dst_project.flights AS f
+ORDER BY delta_flying_minutes DESC
+LIMIT 1
+
+--answer: 530
+
+/*
+Вопрос 3. Между какими аэропортами пролегает самый длительный по времени запланированный рейс?
+*/
+
+SELECT f.departure_airport
+      ,f.arrival_airport
+      ,max(extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/60) AS delta_flying_minutes
+FROM dst_project.flights AS f
+GROUP BY f.departure_airport, f.arrival_airport
+ORDER BY delta_flying_minutes DESC
+--LIMIT 1 --лимит ставить нельзя тк формально 4 рейса имеют равное максимальное время полета
+
+--(departure_airport - arrival_airport) delta_flying_minutes
+-- (UUS - DME)  530
+-- (DME - UUS)  530
+-- (PKC - DME)  530
+-- (DME - PKC)  530
+
+--Итого получается что у нас два рейса "DME - UUS" и "DME - PKC" (а также полеты в обратном направлении)
+-- имеют максимальной время полёта в 530 минут
+
+--answer: поскольку в ответах надо выбрать подходящий, то ответ (DME - UUS)
+
+/*
+использовал для проверки своего вывода
+SELECT f.departure_airport
+      ,f.arrival_airport
+      ,(f.scheduled_arrival-f.scheduled_departure) as delta_arriving --показывает разницу в общем
+      ,max(extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/60) as delta_flying_minutes
+FROM dst_project.flights AS f
+GROUP BY f.departure_airport, f.arrival_airport,delta_arriving
+ORDER BY delta_flying_minutes DESC
+*/
+
+/*
+Вопрос 4. Сколько составляет средняя дальность полета среди всех самолетов в минутах?
+Секунды округляются в меньшую сторону (отбрасываются до минут).
+*/
+
+SELECT avg(f.scheduled_arrival-f.scheduled_departure) AS avg_flying_time
+      ,avg(extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/60) AS avg_flying_time2
+      ,round(avg(extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/60)) AS avg_flying_time3
+FROM dst_project.flights AS f
+
+--answer: 128
+
+/*
+Задание 4.5
+Вопрос 1. Мест какого класса у SU9 больше всего?
+*/
+
+SELECT distinct fare_conditions
+      ,count(distinct seat_no) AS nmb_seats
+FROM dst_project.seats AS s
+WHERE s.aircraft_code='SU9'
+GROUP BY fare_conditions
+ORDER BY nmb_seats DESC
+LIMIT 1
+
+--answer: "Economy"
+
+/*
+Вопрос 2. Какую самую минимальную стоимость составило бронирование за всю историю?
+*/
+
+SELECT min(total_amount)
+FROM dst_project.bookings AS b
+
+--answer: 3400
+
+/*
+Вопрос 3. Какой номер места был у пассажира с id = 4313 788533?
+*/
+
+SELECT b.seat_no
+FROM dst_project.boarding_passes AS b
+    join dst_project.tickets AS t on b.ticket_no=t.ticket_no
+where t.passenger_id='4313 788533'
+
+--answer: "2A"
+
+###########################---5 Часть---#########################################################
+
+/*
+Задание 5.1
+Вопрос 1. Анапа — курортный город на юге России. Сколько рейсов прибыло в Анапу за 2017 год?
+*/
+
+SELECT *
+FROM dst_project.airports
+WHERE city='Anapa'
+
+-- получили код аэропорта Анапа - "AAQ"
+--получим все строчки под наше условие задачи
+
+SELECT count(*) AS nmb_arrived_flight
+FROM dst_project.flights AS f
+WHERE   f.arrival_airport='AAQ'
+  AND f.status='Arrived'
+  AND date_part('year', scheduled_arrival)=2017
+
+--answer: 486
+
+/*
+Вопрос 2. Сколько рейсов из Анапы вылетело зимой 2017 года?
+*/
+
+/* тоже даёт правильный ответ, только конструкция where громозкая
+SELECT count(*) AS nmb_arrived_flight
+FROM dst_project.flights AS f
+WHERE   f.departure_airport='AAQ'
+  AND date_part('year', actual_departure)=2017
+  AND (date_part('month', actual_departure)=1
+       OR date_part('month', actual_departure)=2
+       OR date_part('month', actual_departure)=12 )
+*/
+
+--финальный запрос
+SELECT count(*) AS nmb_arrived_flight
+FROM dst_project.flights AS f
+WHERE f.departure_airport='AAQ'
+  AND date_part('year', actual_departure) = 2017
+  AND date_part('month', actual_departure) in (1, 2, 12)
+
+--answer: 127
+
+/*
+Вопрос 3. Посчитайте количество отмененных рейсов из Анапы за все время.
+*/
+
+SELECT count(*) AS nmb_arrived_flight
+FROM dst_project.flights AS f
+WHERE f.departure_airport='AAQ'
+  AND f.status='Cancelled'
+
+--answer: 1
+
+/*
+
+Вопрос 4. Сколько рейсов из Анапы не летают в Москву?
+
+вопрос не понятен совсем, что считать не понятно вообще.
+Блин кажется этот вопрос должен звучать как 
+"Сколько всего рейсов из Анапы вылетело, за исключением места назначения города Москвы?"
+
+*/
+
+SELECT count(*) AS nmb_depurted_flight
+FROM dst_project.flights AS f
+    join dst_project.airports AS a on f.departure_airport=a.airport_code
+    join dst_project.airports AS a2 on f.arrival_airport=a2.airport_code
+WHERE a.city='Anapa'
+  AND a2.city!='Moscow'
+
+--answer: 453
+
+/*
+Вопрос 5. Какая модель самолета летящего на рейсах из Анапы имеет больше всего мест?
+*/
+
+select distinct airc.model
+      ,count(distinct s.seat_no) as nmb_seats
+from dst_project.flights AS f
+    join dst_project.aircrafts as airc on f.aircraft_code=airc.aircraft_code
+    join dst_project.seats as s on airc.aircraft_code=s.aircraft_code
+    join dst_project.airports as a on f.departure_airport=a.airport_code
+WHERE a.city='Anapa'
+GROUP BY airc.model
+ORDER BY nmb_seats DESC
+LIMIT 1
+
+--answer: 'Boeing 737-300'
+
+
+###########################---PROJECT---#########################################################
+
+/*
+ЗАДАЧА.
+вам предстоит выяснить, от каких самых малоприбыльных рейсов из Анапы
+мы можем отказаться в зимнее время. Вы не знаете, по каким критериям ваше
+руководство будет отбирать рейсы, поэтому решаете собрать как можно больше
+информации, содержащейся в вашей базе, в один датасет.
+
+--исходный запрос
+
+SELECT *
+FROM dst_project.flights
+WHERE departure_airport = 'AAQ'
+  AND (date_trunc('month', scheduled_departure) in ('2017-01-01','2017-02-01', '2017-12-01'))
+  AND status not in ('Cancelled')
+
+*/ 
+
+-- сначала собираю таблицу aircraft_tickets
+
+WITH aircraft_tickets AS (
+    SELECT t.flight_id
+          ,f.aircraft_code
+          
+          --блок суммарных расчетов по рейсу
+          ,(st1.nmb_total_seats + st2.nmb_total_seats) AS total_seats
+          ,count(t.ticket_no) AS total_sold_tickets
+          ,(count(t.ticket_no)::decimal/(st1.nmb_total_seats + st2.nmb_total_seats)*100) AS prc_sold_tickets
+          ,sum(t.amount) AS total_amount
+          ,(  st1.nmb_total_seats * avg(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END) 
+            + st2.nmb_total_seats * avg(CASE WHEN t.fare_conditions = 'Economy'  THEN t.amount END)) AS max_revenue
+            
+          ,round((  st1.nmb_total_seats * avg(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END) 
+            + st2.nmb_total_seats * avg(CASE WHEN t.fare_conditions = 'Economy'  THEN t.amount END)
+            - sum(t.amount))::numeric,2) AS lost_revenue
+          
+          --блок расчетов по бизнес-классу
+          ,st1.nmb_total_seats AS b_nmb_total_seats
+          ,count(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END) AS b_total_sold_tickets
+          ,(count(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END)::decimal/(st1.nmb_total_seats)*100) AS b_prc_sold_tickets
+          ,sum(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END) AS b_total_amount
+          ,avg(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END) AS b_avg_amount
+          ,((st1.nmb_total_seats-count(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END))*avg(CASE WHEN t.fare_conditions = 'Business' THEN t.amount END)) AS b_lost_revenue
+          
+          --блок расчетов по эконом-классу
+          ,st2.nmb_total_seats AS e_nmb_total_seats
+          ,count(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END) AS e_total_sold_tickets
+          ,(count(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END)::decimal/(st2.nmb_total_seats)*100) AS e_prc_sold_tickets
+          ,sum(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END) AS e_total_amount
+          ,avg(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END) AS e_avg_amount
+          ,((st2.nmb_total_seats-count(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END))*avg(CASE WHEN t.fare_conditions = 'Economy' THEN t.amount END)) AS e_lost_revenue
+          
+    FROM dst_project.ticket_flights AS t
+        JOIN dst_project.flights AS f ON t.flight_id=f.flight_id
+        LEFT JOIN (SELECT s.aircraft_code ,s.fare_conditions ,count(distinct s.seat_no) AS nmb_total_seats
+                   FROM  dst_project.seats AS s
+                   WHERE s.fare_conditions='Business'
+                   GROUP BY 1,2) AS st1 
+                   ON f.aircraft_code=st1.aircraft_code --and t.fare_conditions=st1.fare_conditions
+        LEFT JOIN (SELECT s.aircraft_code ,s.fare_conditions ,count(distinct s.seat_no) AS nmb_total_seats
+                   FROM  dst_project.seats AS s
+                   WHERE s.fare_conditions='Economy'
+                   GROUP BY 1,2) AS st2 
+                   ON f.aircraft_code=st2.aircraft_code --and t.fare_conditions=st2.fare_conditions
+    -- сделаем выборку только необходимых нам данных - чтобы ускорить выполнение запроса
+    WHERE f.departure_airport = 'AAQ'
+      AND (date_trunc('month', f.scheduled_departure) in ('2017-01-01','2017-02-01', '2017-12-01'))
+      AND f.status not in ('Cancelled')  
+    GROUP BY 1,2,3,9,15),
+
+    variable_table (key_id, var) AS (
+VALUES
+('Boeing 737-300'      ::text, 2.132::float), 
+('Sukhoi Superjet-100' ::text, 1.394::float),
+('Moscow'              ::text, 1210::int),      -- эта строка получилась не нужной, тк сделал расчет расстояния между городами через формулу по координатам аэропортов
+('Belgorod'            ::text, 642::int),       -- эта строка получилась не нужной, тк сделал расчет расстояния между городами через формулу по координатам аэропортов
+('Novokuznetsk'        ::text, 3664::int)       -- эта строка получилась не нужной, тк сделал расчет расстояния между городами через формулу по координатам аэропортов
+)
+
+SELECT  
+ --       count(*) -- использовал для проверки количества строчек в итоговом запросе (127)
+        f.flight_id
+       ,f.scheduled_departure
+       ,CASE 
+            WHEN date_part('hour',f.scheduled_departure)>5   AND date_part('hour',f.scheduled_departure)<12 THEN 'morning'
+            WHEN date_part('hour',f.scheduled_departure)>=12 AND date_part('hour',f.scheduled_departure)<17 THEN 'day'
+            WHEN date_part('hour',f.scheduled_departure)>=17 AND date_part('hour',f.scheduled_departure)<23 THEN 'evening'
+            ELSE 'night'
+        END AS day_part     -- это несильно помогло, тк все рейсы утренние оказались.
+       ,CASE 
+            WHEN f.scheduled_departure=f.actual_departure THEN 0
+            WHEN f.scheduled_departure>f.actual_departure THEN 1
+            WHEN f.scheduled_departure<f.actual_departure THEN -1
+            ELSE 999
+        END AS flight_departure_ontime  -- тоже несильно помогло
+       ,CASE 
+            WHEN f.scheduled_arrival=f.actual_arrival THEN 0
+            WHEN f.scheduled_arrival>f.actual_arrival THEN 1
+            WHEN f.scheduled_arrival<f.actual_arrival THEN -1
+            ELSE 999
+        END AS flight_arrival_ontime    -- тоже несильно помогло
+       ,a3.city AS airp_departure
+       ,a.city AS airp_arrival
+       ,f.arrival_airport
+       ,a2.model AS flight_model
+       --,vrb2.var as distance_flight  --больше не нужно, тк производится расчет по формуле
+       ,ROUND(( 
+          6371 * acos (
+          cos ( radians(45) )
+          * cos( radians( a.latitude ) )
+          * cos( radians( a.longitude ) - radians(37.35) )
+          + sin ( radians(45) )
+          * sin( radians( a.latitude ) )
+          ))) AS distance_from_anapa
+       ,extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/3600 AS flying_time_hours
+       ,(vrb.var*(date_part('hour',f.actual_arrival-f.actual_departure)+date_part('minute',f.scheduled_arrival-f.scheduled_departure)/60)*51859) AS flight_fuel_cons_cost
+       --,(vrb.var*extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/3600)*51859 AS flight_fuel_cons_cost --формулу нашел в интернете... считает ровно также как и срока выше.
+       ,(vrb.var*extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/3600)*51859/0.25 AS flight_total_cost --доля авиатоплива 25% в общих расходах на рейс.
+       ,(t1.total_amount - (vrb.var*(date_part('hour',f.actual_arrival-f.actual_departure)+date_part('minute',f.scheduled_arrival-f.scheduled_departure)/60)*51859)) AS profit_simple
+       ,(t1.total_amount - (vrb.var*extract(epoch from (f.scheduled_arrival-f.scheduled_departure))/3600)*51859/0.25) AS profit
+       ,t1.total_seats
+       ,t1.total_sold_tickets
+       ,t1.prc_sold_tickets
+       ,t1.total_amount
+       ,t1.max_revenue
+       ,t1.lost_revenue
+       ,t1.b_nmb_total_seats
+       ,t1.b_total_sold_tickets
+       ,t1.b_prc_sold_tickets
+       ,t1.b_total_amount
+       ,t1.b_avg_amount
+       ,t1.b_lost_revenue
+       ,t1.e_nmb_total_seats
+       ,t1.e_total_sold_tickets
+       ,t1.e_prc_sold_tickets
+       ,t1.e_total_amount
+       ,t1.e_avg_amount
+       ,t1.e_lost_revenue
+
+FROM dst_project.flights AS f
+    JOIN dst_project.airports AS a ON f.arrival_airport=a.airport_code
+    JOIN dst_project.airports AS a3 ON f.departure_airport=a3.airport_code
+    JOIN dst_project.aircrafts AS a2 ON f.aircraft_code=a2.aircraft_code
+    JOIN variable_table AS vrb ON a2.model=vrb.key_id
+    LEFT JOIN aircraft_tickets AS t1 ON f.flight_id=t1.flight_id AND f.aircraft_code=t1.aircraft_code
+WHERE f.departure_airport = 'AAQ'
+  AND (date_trunc('month', f.scheduled_departure) in ('2017-01-01','2017-02-01', '2017-12-01')) -- оставил первый вариант, тк мне лично он более понятен, и он короче.
+  --AND (date_part('month', f.actual_departure) in (1,2,12) AND date_part('year', f.actual_departure) in (2017))
+  AND f.status not in ('Cancelled')  
+ORDER BY f.flight_id
+
+
+###########################---PROJECT (previous version)---#########################################################
+
+--если интересно, то ниже предыдущая версия запроса
+--мне в нем не понравился запрос в with, но есть ощущение и финальную версию можно сделать ещё изящнее.
+--хотя когда в запросе присутствует столько полей, то сложность написания возрастает...
+-- и всё остался вопрос как сделать полноценную переменную в запросе,
+-- то, что я сделал - это по сути таблица с переменными, а вот совсем никак не связанный параметр я не понял как завести в запрос.
+-- Мне бы больше понравилось до запроса объявить переменную с именем города и потом её использовать в запросе.
+
+--вот он - оставил с своими старыми комментариями и мыслями "как есть"
+
+--новый запрос - хочу развернуть всё по столбцам (чтобы одна строчка = одному рейсу)
+
+with aircraft_tickets_business as (
+    select t.flight_id
+          ,f.aircraft_code
+          --,t.fare_conditions
+          ,sum(t.amount) as b_total_amount
+          ,count(t.amount) as b_total_sold_tickets
+          ,avg(t.amount) as b_avg_amount
+          ,a_s.nmb_total_seats as b_total_seats
+    from dst_project.ticket_flights as t
+        join dst_project.flights as f on t.flight_id=f.flight_id
+        left join (select s.aircraft_code
+          ,s.fare_conditions
+          ,count(distinct s.seat_no) as nmb_total_seats
+        from  dst_project.seats as s
+        where s.fare_conditions='Business'
+        group by 1,2) as a_s on f.aircraft_code=a_s.aircraft_code and t.fare_conditions=a_s.fare_conditions
+    where t.fare_conditions='Business'
+    group by 1,2,6),
+
+ aircraft_tickets_economy as (
+    select t.flight_id
+          ,f.aircraft_code
+          --,t.fare_conditions
+          ,sum(t.amount) as e_total_amount
+          ,count(t.amount) as e_total_sold_tickets
+          ,avg(t.amount) as e_avg_amount
+          ,a_s.nmb_total_seats as e_total_seats
+    from dst_project.ticket_flights as t
+            join dst_project.flights as f on t.flight_id=f.flight_id
+            left join (select s.aircraft_code
+              ,s.fare_conditions
+              ,count(distinct s.seat_no) as nmb_total_seats
+            from  dst_project.seats as s
+            where s.fare_conditions='Economy'
+            group by 1,2) as a_s on f.aircraft_code=a_s.aircraft_code and t.fare_conditions=a_s.fare_conditions
+    where t.fare_conditions='Economy'
+    group by 1,2,6)
+
+--надо добавить к ИД рейса: Город назначения, модель самолета, дистанция полета, расход топлива
+-- стоимость топлива через переменную, посчитать итоговую выручку от продажи билетов с рейса,
+-- заложить остальные расходы (кроме топлива), посчитать итоговую прибыль с рейса
+
+/*
+-- взял с сайта https://askdev.ru/q/kak-obyavit-peremennuyu-v-zaprose-postgresql-14449/
+-- пишут, что особо не рекомендуют пользваться такими конструкциями(((
+WITH myconstants (var1, var2) as (
+   values (5, 'foo')
+)
+SELECT *
+FROM somewhere, myconstants
+WHERE something = var1
+   OR something_else = var2;
+*/
+
+SELECT f.flight_id
+      ,f.arrival_airport
+      ,f.aircraft_code
+      ,t1.b_total_amount
+      ,t1.b_total_sold_tickets
+      ,t1.b_avg_amount
+      ,t1.b_total_seats
+      ,t2.e_total_amount
+      ,t2.e_total_sold_tickets
+      ,t2.e_avg_amount
+      ,t2.e_total_seats
+from dst_project.flights as f
+    left join aircraft_tickets_business as t1 on f.flight_id=t1.flight_id and f.aircraft_code=t1.aircraft_code
+    left join aircraft_tickets_economy as t2 on f.flight_id=t2.flight_id and f.aircraft_code=t2.aircraft_code
+WHERE f.departure_airport = 'AAQ'
+  AND (date_trunc('month', f.scheduled_departure) in ('2017-01-01','2017-02-01', '2017-12-01'))
+  AND f.status not in ('Cancelled')   
+  
+  
+###########################---PROJECT (previous version)---#########################################################
