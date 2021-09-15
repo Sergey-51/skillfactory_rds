@@ -2,7 +2,7 @@
 -------------------------------------------------
 
 работа сдавалась и оформлялась в Kaggle
-https://www.kaggle.com/sergey51/notebook3ef1f607c4/edit/run/74773959
+https://www.kaggle.com/sergey51/prj-5
 
 ПС. Приложенный ноутбук выгружен с Kaggle.
 
