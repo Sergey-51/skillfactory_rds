@@ -50,7 +50,7 @@
 
 ## Что еще можно было бы сделать?
 
-<img src="https://user-images.githubusercontent.com/78755876/145108486-290b8db7-e8c4-48c1-8bee-eec7ff939e49.png" width="350" height="250" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br>
+<img src="https://user-images.githubusercontent.com/78755876/145108486-290b8db7-e8c4-48c1-8bee-eec7ff939e49.png" width="350" height="175" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br>
 
 * Спарсить больше данных (спарсить успел, но не успел обработать их более 98'000 объявлений).
 * Можно распараллелить парсинг.
