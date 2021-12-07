@@ -46,7 +46,7 @@
 * Пришлось сравнивать данные между полученными данными для обучения (train) и имеющимся тестовым набором (test).
 * Попробовал использовать pandas_profiling (файлы находятся в папке data).
 * Поэкспериментировал с onehotencoding (сгоряча написал свой кодировщик категориальных признаков).
-* Реализовал стекинг итоговый результат: MAPE=13.76%, Public LB=15.57091 и 97 место на лидерборде [результат](https://twitter.com/intent/tweet?text=Rank%2097%20on%20%23kaggle.%20I%27ll%20sleep%20when%20I%27m%20dead.%20https%3A%2F%2Fkaggle.com%2Fc%2Fsf-dst-car-price-prediction)
+* В результате получил MAPE=13.76% и 15.57091 баллов на Public LB -> 97 место на лидерборде [результат](https://twitter.com/intent/tweet?text=Rank%2097%20on%20%23kaggle.%20I%27ll%20sleep%20when%20I%27m%20dead.%20https%3A%2F%2Fkaggle.com%2Fc%2Fsf-dst-car-price-prediction)
 
 ## Что еще можно было бы сделать?
 * Спарсить больше данных (спарсить успел, но не успел обработать их более 98'000 объявлений).
