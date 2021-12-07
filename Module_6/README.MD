@@ -39,7 +39,7 @@
    *   [submission 15-57091.csv](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/submission%2015-57091.csv) итоговый файл submission.csv
 
 ## Результаты (что было проделано)
-<img src="https://user-images.githubusercontent.com/78755876/145108813-06c7c52b-efe2-48da-b52e-2a8541293d17.png" width="500" height="315" align="left"/><br><br><br><br><br><br><br>
+<img src="https://user-images.githubusercontent.com/78755876/145108813-06c7c52b-efe2-48da-b52e-2a8541293d17.png" width="400" height="250" align="left"/><br><br><br><br><br><br><br><br><br><br>
 
 * Был реализован парсинг сайта auto.ru (был опробован парсинг через html и json, остановился на первом, тк json давал не полные данные (но скорее всего я не до разобрался с форматом))
 * По результату пришлось перепарсить данные (хорошо, что я сохранил все ответы сервера по каждой ссылке, поэтому второй раз парсинг прошел гораздо быстрее), для этого пришлось писать вспомогательный ноутбук.
@@ -52,7 +52,7 @@
 
 ## Что еще можно было бы сделать?
 
-<img src="https://user-images.githubusercontent.com/78755876/145108486-290b8db7-e8c4-48c1-8bee-eec7ff939e49.png" width="250" height="250" align="left"/><br><br><br><br><br><br><br>
+<img src="https://user-images.githubusercontent.com/78755876/145108486-290b8db7-e8c4-48c1-8bee-eec7ff939e49.png" width="250" height="250" align="left"/><br><br><br><br><br><br><br><br><br><br>
 
 * Спарсить больше данных (спарсить успел, но не успел обработать их более 98'000 объявлений).
 * Можно распараллелить парсинг.
@@ -62,7 +62,7 @@
 * Потратить больше времени на подбор гиперпараметров для моделей и после этого сравнить уже длучше моджели с лучшими и собрать из них стекинг.
 
 ## Что понравилось?
-<img src="https://user-images.githubusercontent.com/78755876/145109153-7f0a2f61-eea4-4e7c-9bc5-0622d1822fbb.png" width="250" height="165" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br>
+<img src="https://user-images.githubusercontent.com/78755876/145109153-7f0a2f61-eea4-4e7c-9bc5-0622d1822fbb.png" width="250" height="165" align="left"/><br><br><br><br><br><br><br><br><br>
 
 * парсинг действительно сильно затягивает (тому кто это читает - будте окуратнее, время очень много уходит)
 * оказалось не так легко объединить train и test, видимо так было задумано. Пришлось проходить по всем признакам внимательно.
