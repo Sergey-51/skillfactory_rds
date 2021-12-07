@@ -4,7 +4,7 @@
 
 ## УСЛОВИЯ
 
-<img src="https://user-images.githubusercontent.com/78755876/145105518-e1b10713-5f2c-4b08-bf6e-da8a4ea8d82d.png" width="350" height="250" align="left"/><br>
+<img src="https://user-images.githubusercontent.com/78755876/145105518-e1b10713-5f2c-4b08-bf6e-da8a4ea8d82d.png" width="350" height="250" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 * Вы работаете в компании, которая занимается продажей автомобилей с пробегом в Москве. 
 * Основная задача компании и её менеджеров — максимально быстро находить выгодные предложения (проще говоря, купить ниже рынка, а продать дороже рынка). 
