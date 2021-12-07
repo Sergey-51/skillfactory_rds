@@ -16,7 +16,9 @@
 * В качестве скоринга необходимо улучшить MAPE - Mean absolute percentage error (меньше значение = лучше предсказание). 
 * Сами спарсенные данные приложить не получилось - размер файлов слишком большой.
 * В папке находится три файла:
-   *   [01-F-Parsing.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/01-F-Parsing.ipynb)
+   *   [01-F-Parsing.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/01-F-Parsing.ipynb) Jupyter Notebook с парсингом auto.ru
+   *   [02-F-Clearing Data.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/02-F-Clearing%20Data.ipynb) Jupyter Notebook с первичным знакомством с данными
+   *   [03-F-Modelling.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/03-F-Modelling.ipynb) Финальный Jupyter Notebook с моделированием.
 
 ## Результаты (что было проделано)
 * Был реализован парсинг сайта auto.ru (был опробован парсинг через html и json, остановился на первом, тк json давал не полные данные (но скорее всего я не до разобрался с форматом))
