@@ -1,6 +1,6 @@
 # SkillFactory DataScience
  
-## Module_6: Разведывательный анализ данных (Exploratory data analysis) + Feature Engineering (FE) + ML, предсказание цены, градиентный бустинг и стекинг, API, работа с текстом 
+## Module_6: Разведывательный анализ данных (Exploratory data analysis) + Feature Engineering (FE), предсказание цены, градиентный бустинг и стекинг. 
 
 ## Задачи: 
 * Спасить данные для обучающей выборки.
