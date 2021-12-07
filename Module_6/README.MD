@@ -2,7 +2,7 @@
  
 ## Module_6: Выбираем авто выгодно. 
 
-<img src="https://user-images.githubusercontent.com/78755876/145107275-290d5fd7-b337-4fef-a418-cd300c20b805.png" width="350" height="250" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br>
+<img src="https://user-images.githubusercontent.com/78755876/145107275-290d5fd7-b337-4fef-a418-cd300c20b805.png" width="700" height="500" align="left"/><br><br><br><br><br><br><br><br><br><br><br><br>
 
 ## УСЛОВИЯ
 
