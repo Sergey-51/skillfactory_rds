@@ -32,10 +32,11 @@
 * Данные о автомобиле содержали более 20 признаков.
 * В качестве скоринга необходимо улучшить MAPE - Mean absolute percentage error (меньше значение = лучше предсказание). 
 * Сами спарсенные данные приложить не получилось - размер файлов слишком большой.
-* В папке находится три файла:
+* В папке находится четыре файла:
    *   [01-F-Parsing.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/01-F-Parsing.ipynb) Jupyter Notebook с парсингом auto.ru
    *   [02-F-Clearing Data.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/02-F-Clearing%20Data.ipynb) Jupyter Notebook с первичным знакомством с данными
    *   [03-F-Modelling.ipynb](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/03-F-Modelling.ipynb) Финальный Jupyter Notebook с моделированием.
+   *   [submission 15-57091.csv](https://github.com/Sergey-51/skillfactory_rds/blob/master/Module_6/submission%2015-57091.csv) итоговый файл submission.csv
 
 ## Результаты (что было проделано)
 * Был реализован парсинг сайта auto.ru (был опробован парсинг через html и json, остановился на первом, тк json давал не полные данные (но скорее всего я не до разобрался с форматом))
@@ -45,7 +46,7 @@
 * Пришлось сравнивать данные между полученными данными для обучения (train) и имеющимся тестовым набором (test).
 * Попробовал использовать pandas_profiling (файлы находятся в папке data).
 * Поэкспериментировал с onehotencoding (сгоряча написал свой кодировщик категориальных признаков).
-* Реализовал стекинг итоговый результат: MAPE=13.76%, Public LB=15.57091 и 97 место на лидерборде
+* Реализовал стекинг итоговый результат: MAPE=13.76%, Public LB=15.57091 и 97 место на лидерборде [результат](https://twitter.com/intent/tweet?text=Rank%2097%20on%20%23kaggle.%20I%27ll%20sleep%20when%20I%27m%20dead.%20https%3A%2F%2Fkaggle.com%2Fc%2Fsf-dst-car-price-prediction)
 
 ## Что еще можно было бы сделать?
 * Спарсить больше данных (спарсить успел, но не успел обработать их более 98'000 объявлений).
