@@ -4,6 +4,7 @@
 
 ## УСЛОВИЯ
 
+<img src="https://user-images.githubusercontent.com/78755876/145105518-e1b10713-5f2c-4b08-bf6e-da8a4ea8d82d.png" width="500" height="250" align="left"/><br>
 ![image](https://user-images.githubusercontent.com/78755876/145105518-e1b10713-5f2c-4b08-bf6e-da8a4ea8d82d.png)
 
 * Вы работаете в компании, которая занимается продажей автомобилей с пробегом в Москве. 
